@@ -5,8 +5,6 @@ _YAST stands for Yast AST. Or Yet Another Syntax Tree._
 
 _Note, build with maven to generate sources before executing tests._
 
-_Note, you need to build locally [jcommon](https://github.com/kravchik/jcommon) and [yincubator](https://github.com/kravchik/yincubator)_ 
-
 ## Common
 Currently, only constants and some utils are here. Maybe, it will contain more (typers, translators, optimizers, etc.).
 
