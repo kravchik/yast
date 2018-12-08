@@ -1,0 +1,2 @@
+Most part of this module is the grammars from https://github.com/shadrina/kotlin-grammar-antlr4
+They are here without any modifications, and for testing purpose only. If you want to use it - take it from https://github.com/shadrina/kotlin-grammar-antlr4 and consult license there.

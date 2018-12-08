@@ -1,0 +1,64 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>yk.yast</groupId>
+    <artifactId>yast</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>yast</name>
+
+    <modules>
+        <module>common</module>
+        <module>kotlin</module>
+        <module>kotlinAntlr</module><!--TODO get rid-->
+        <module>kotlinJetBrains</module><!--TODO get rid-->
+
+    </modules>
+
+    <prerequisites>
+        <maven>2.0.9</maven>
+    </prerequisites>
+
+    <properties>
+        <kotlin.version>1.2.71</kotlin.version>
+    </properties>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>yk</groupId>
+            <artifactId>jcommon</artifactId>
+            <version>0.122-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+        </dependency>
+
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.3.2</version>
+        </dependency>
+
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>yk</id>
+            <url>https://github.com/kravchik/mvn-repo/raw/master</url>
+        </repository>
+
+    </repositories>
+
+</project>

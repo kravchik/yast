@@ -1,0 +1,1378 @@
+
+//TODO global LOOKAHEAD(1)
+options {
+  STATIC = false;    
+  //NODE_DEFAULT_VOID = true;
+  //VISITOR = true;
+  //MULTI = true;
+  JAVA_UNICODE_ESCAPE = true;
+}
+
+PARSER_BEGIN(KotlinParser)
+
+package yk.kotlin.gen;
+
+import java.util.List;
+import yk.jcommon.collections.YList;
+import static yk.jcommon.collections.YArrayList.al;
+import java.util.ArrayList;
+import java.io.ByteArrayInputStream;
+
+import yk.yast.common.Words;
+import yk.yast.kotlin.WordsKotlin;
+import static yk.yast.common.Words.*;
+import static yk.yast.kotlin.WordsKotlin.*;
+import yk.yast.common.YastNode;
+import static yk.yast.common.YastNode.*;
+import yk.jcommon.utils.BadException;
+
+
+public class KotlinParser {
+    private boolean isEnum;
+//    public static YastNode parse(String s) {
+//        try {
+//            return new KotlinParser(new ByteArrayInputStream(s.getBytes("UTF-8"))).CompilationUnit();
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
+}
+
+PARSER_END(KotlinParser)
+
+
+SKIP : /* WHITE SPACE */
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+SPECIAL_TOKEN : /* COMMENTS */
+{
+  <SINGLE_LINE_COMMENT: "//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+| <FORMAL_COMMENT: "/**" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+| <MULTI_LINE_COMMENT: "/*" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+}
+
+//TOKEN :
+//{
+//    <SINGLE_LINE_H_INSERTION: "cpph:" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+//  | <SINGLE_LINE_INSERTION: "cpp:" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+//}
+
+TOKEN : /* RESERVED WORDS AND LITERALS */
+{
+  < T_ABSTRACT: "abstract" >
+| < T_BREAK: "break" >
+| < T_BY: "by" >
+| < T_FUN: "fun" >
+| < T_CASE: "case" >
+| < T_CATCH: "catch" >
+| < T_CHAR: "Char" >
+| < T_CLASS: "class" >
+| < T_OBJECT: "object" >
+| < T_STRUCT: "struct" >
+| < T_CONST: "const" >
+| < T_CONSTRUCTOR: "constructor" >
+| < T_CONTINUE: "continue" >
+| < T_DEFAULT: "default" >
+| < T_DO: "do" >
+| < T_DOUBLE: "Double" >
+| < T_ELSE: "else" >
+| < T_EXTENDS: "extends" >
+| < T_FALSE: "false" >
+| < T_FINAL: "final" >
+| < T_FINALLY: "finally" >
+| < T_FOR: "for" >
+| < T_GOTO: "goto" >
+| < T_IF: "if" >
+| < T_IMPLEMENTS: "implements" >
+| < T_IMPORT: "import" >
+| < T_INSTANCEOF: "instanceof" >
+| < T_INTERFACE: "interface" >
+| < T_NATIVE: "native" >
+| < T_NEW: "new" >
+| < T_NULL: "null" >
+| < T_PACKAGE: "package">
+| < T_PRIVATE: "private" >
+| < T_PROTECTED: "protected" >
+| < T_PUBLIC: "public" >
+| < T_RETURN: "return" >
+| < T_STATIC: "static" >
+| < T_SUPER: "super" >
+| < T_SWITCH: "switch" >
+| < T_SYNCHRONIZED: "synchronized" >
+| < T_THIS: "this" >
+| < T_THROW: "throw" >
+| < T_THROWS: "throws" >
+| < T_TRANSIENT: "transient" >
+| < T_TRUE: "true" >
+| < T_TRY: "try" >
+| < T_VOID: "void" >
+| < T_VOLATILE: "volatile" >
+| < T_WHILE: "while" >
+| < T_VAR: "var" >
+| < T_VAL: "val" >
+
+| < T_ENUM : "enum" >
+| < T_OPEN : "open" >
+| < T_ANNOTATION : "annotation" >
+| < T_SEALED : "sealed" >
+| < T_DATA : "data" >
+| < T_OVERRIDE : "override" >
+| < T_LATEINIT : "lateinit" >
+| < T_INTERNAL : "internal" >
+| < T_IN : "in" >
+| < T_IS : "is" >
+| < T_AS : "as" >
+| < T_AS_Q : "as?" >
+| < T_NOT_IN : "!in" >
+| < T_NOT_IS : "!is" >
+| < T_OUT : "out" >
+| < T_NOINLINE : "noinline" >
+| < T_CROSSINLINE : "crossinline" >
+| < T_VARARG : "vararg" >
+| < T_REIFIED : "reified" >
+| < T_TAILREC : "tailrec" >
+| < T_OPERATOR : "operator" >
+| < T_INFIX : "infix" >
+| < T_INLINE : "inline" >
+| < T_EXTERNAL : "external" >
+| < T_SUSPEND : "suspend" >
+| < T_DYNAMIC : "dynamic" >
+| < T_INIT : "init" >
+
+}
+
+TOKEN : /* LITERALS */
+{
+  < INTEGER_LITERAL:
+        <DECIMAL_LITERAL>
+      | <HEX_LITERAL>
+        //TODO  binary literal
+  >
+|
+  < LONG_INTEGER_LITERAL:
+        <DECIMAL_LITERAL> ("L")
+      | <HEX_LITERAL> ("L")
+        //TODO binary literal
+  >
+|
+  < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
+|
+  < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+|
+  < #OCTAL_LITERAL: "0" (["0"-"7"])* >
+|
+  < FLOATING_POINT_LITERAL:
+        (["0"-"9"])+ "." (["0"-"9"])+ (<EXPONENT>)? (["f","F"])
+      | "." (["0"-"9"])+ (<EXPONENT>)? (["f","F"])
+      | (["0"-"9"])+ <EXPONENT> (["f","F"])
+      | (["0"-"9"])+ (<EXPONENT>)? ["f","F"]
+  >
+|
+  < DOUBLE_FLOATING_POINT_LITERAL:
+        (["0"-"9"])+ "." (["0"-"9"])+ (<EXPONENT>)? (["d","D"])?
+      | "." (["0"-"9"])+ (<EXPONENT>)? (["d","D"])?
+      | (["0"-"9"])+ <EXPONENT> (["d","D"])?
+      | (["0"-"9"])+ (<EXPONENT>)? ["d","D"]
+  >
+|
+  < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+|
+  < CHARACTER_LITERAL:
+      "'"
+      (   (~["'","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )
+      "'"
+  >
+|
+  < STRING_LITERAL:
+      "\""
+      (   (~["\"","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )*
+      "\""
+  >
+}
+
+//TODO `strange names syntax`
+TOKEN : /* IDENTIFIERS */
+{
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+|
+  < #LETTER:
+      [
+       "\u0024",
+       "\u0041"-"\u005a",
+       "\u005f",
+       "\u0061"-"\u007a",
+       "\u00c0"-"\u00d6",
+       "\u00d8"-"\u00f6",
+       "\u00f8"-"\u00ff",
+       "\u0100"-"\u1fff",
+       "\u3040"-"\u318f",
+       "\u3300"-"\u337f",
+       "\u3400"-"\u3d2d",
+       "\u4e00"-"\u9fff",
+       "\uf900"-"\ufaff"
+      ]
+  >
+|
+  < #DIGIT:
+      [
+       "\u0030"-"\u0039",
+       "\u0660"-"\u0669",
+       "\u06f0"-"\u06f9",
+       "\u0966"-"\u096f",
+       "\u09e6"-"\u09ef",
+       "\u0a66"-"\u0a6f",
+       "\u0ae6"-"\u0aef",
+       "\u0b66"-"\u0b6f",
+       "\u0be7"-"\u0bef",
+       "\u0c66"-"\u0c6f",
+       "\u0ce6"-"\u0cef",
+       "\u0d66"-"\u0d6f",
+       "\u0e50"-"\u0e59",
+       "\u0ed0"-"\u0ed9",
+       "\u1040"-"\u1049"
+      ]
+  >
+}
+
+TOKEN : /* SEPARATORS */
+{
+  < T_LPAREN: "(" >
+| < T_RPAREN: ")" >
+| < T_LBRACE: "{" >
+| < T_RBRACE: "}" >
+| < T_LBRACKET: "[" >
+| < T_RBRACKET: "]" >
+| < T_SEMICOLON: ";" >
+| < T_COMMA: "," >
+| < T_RANGE : ".." >
+| < T_DOT: "." >
+}
+
+TOKEN : /* OPERATORS */
+{
+  < T_ASSIGN: "=" >
+| < T_GT: ">" >
+| < T_LT: "<" >
+| < T_BANG: "!" >
+| < T_TILDE: "~" >
+| < T_HOOK: "?" >
+| < T_COLON: ":" >
+| < T_EQ: "==" >
+| < T_LE: "<=" >
+| < T_GE: ">=" >
+| < T_NE: "!=" >
+| < T_SC_OR: "||" >
+| < T_SC_AND: "&&" >
+| < T_INCR: "++" >
+| < T_DECR: "--" >
+| < T_PLUS: "+" >
+| < T_MINUS: "-" >
+| < T_STAR: "*" >
+| < T_SLASH: "/" >
+| < T_BIT_AND: "&" >
+| < T_BIT_OR: "|" >
+| < T_XOR: "^" >
+| < T_REM: "%" >
+| < T_LSHIFT: "<<" >
+| < T_RSIGNEDSHIFT: ">>" >
+| < T_RUNSIGNEDSHIFT: ">>>" >
+| < T_PLUSASSIGN: "+=" >
+| < T_MINUSASSIGN: "-=" >
+| < T_STARASSIGN: "*=" >
+| < T_SLASHASSIGN: "/=" >
+| < T_ANDASSIGN: "&=" >
+| < T_ORASSIGN: "|=" >
+| < T_XORASSIGN: "^=" >
+| < T_REMASSIGN: "%=" >
+| < T_LSHIFTASSIGN: "<<=" >
+| < T_RSIGNEDSHIFTASSIGN: ">>=" >
+| < T_RUNSIGNEDSHIFTASSIGN: ">>>=" >
+| < T_AT : "@" >
+}
+
+/*
+ * Program structuring syntax follows.
+ */
+
+//YastNode StatementExpression() :
+//{YastNode result;}
+//{
+////{System.out.println("in StatementExpression");}
+//
+//                                (
+//                                LOOKAHEAD( DotExpression() AssignmentOperator() )
+//result =                        Assignment()
+//                                |
+//result =                        PrefixExpression()
+//                                )
+//}
+
+YastNode File() :
+{String p = null;YastNode n;YList imports = al();YList objects = al();YList annotations = al();String test;YastNode result = node(FILE);}
+{
+    Preamble(result)
+
+    (n = TopLevelObject() {objects.add(n);})*
+
+    {result.map.put(MEMBERS, objects); return result;}
+}
+
+YastNode Script() :
+{String p = null;YastNode n;YList imports = al();YList objects = al();YList annotations = al();String test;YastNode result = node(SCRIPT);}
+{
+    Preamble(result)
+
+    (n = Expression() {objects.add(n);})*
+
+    {result.map.put(BODY, objects); return result;}
+}
+
+void Preamble(YastNode result) :
+{String p = null;YastNode n;YList imports = al();YList objects = al();YList annotations = al();String test;}
+{
+//preamble
+//: fileAnnotations? packageHeader? import*
+    ("@" test = <IDENTIFIER>.image {if (!"file".equals(test)) throw new BadException("expected 'file' but encountered " + test);}
+    ":" ("[" (n = UnescapedAnnotation() {annotations.add(n);})+ "]" | n = UnescapedAnnotation() {{annotations.add(n);}}))?
+    ("package" p = DottedName() [SEMI()])?
+    (n = Import() {imports.add(n);})*
+
+    {
+    result.map.put(ANNOTATIONS, annotations);
+    if (p != null) result.map.put(PACKAGE, p);
+    result.map.put(IMPORTS, imports);
+    }
+}
+
+YastNode UnescapedAnnotation() :
+{String n; List typeArgs = null; List valueArgs = null;}
+{
+    n = DottedName() [typeArgs = TypeArguments()] [
+    LOOKAHEAD(1)//because annotatin VS expression in script
+    valueArgs = ValueArguments()]
+
+    {return node(UNESCAPED_ANNOTATION, NAME, n, TYPE_ARGUMENTS, typeArgs, ARGS, valueArgs);}
+}
+
+
+YastNode Import() :
+{String s;String s1;}
+{
+//     "import" s = DottedIdentifier() ("." "*" | "as" SimpleName())? (SEMI())?  TODO
+     "import" s = DottedName() [SEMI()]
+    {return node(IMPORT, VALUE, s);}
+}
+
+YastNode TopLevelObject() :
+{YastNode result;YList modifiers;}
+{
+//topLevelObject
+//        : class
+//        : object        
+//        : function
+//        : property
+//        : typeAlias     TODO
+
+    modifiers =         Modifiers()
+    (
+      result = Property()
+    | result = Class()
+    | result = _Object()
+    | result = Function()
+    )
+
+    {result.map.put(MODIFIERS, modifiers);return result;}
+}
+
+YastNode Class() :
+{boolean isInterface = false;String name;YList body = null;
+YastNode pConstructor = null;YList typeParameters = null;boolean localIsEnum = false;}
+{
+//      : modifiers ("class" | "interface") SimpleName
+//      typeParameters?
+//      primaryConstructor?
+//      (":" annotations delegationSpecifier{","})?  TODO
+//      typeConstraints                              TODO
+//      (classBody? | enumClassBody TODO)
+
+        ("class" | "interface" {isInterface = true;}) name = IdentifierString()
+        [typeParameters =   TypeParameters()]
+        [LOOKAHEAD(1)//when inside method
+            pConstructor =     PrimaryConstructor()]
+        [  LOOKAHEAD({!isEnum})
+                   body = ClassBody()
+           | body = EnumClassBody() {localIsEnum = true;}
+        ]
+
+{
+    //if (isInterface)
+    YastNode result = node(localIsEnum ? ENUM_DEF : CLASS_DEF, NAME, name);
+    if (typeParameters != null) result.map.put(TYPE_PARAMETERS, typeParameters);
+    if (pConstructor != null) {
+        if (body == null) {body = al();result.map.put(MEMBERS, body);}
+        body.add(pConstructor);
+    }
+    if (body != null) result.map.put(MEMBERS, body);
+    return result;
+}}
+
+YastNode _Object() :
+{String name;YastNode pConstructor = null;YList body = null;}
+{
+//"object" SimpleName primaryConstructor?
+//(":" delegationSpecifier{","})?          TODO
+//classBody?
+  "object"
+  name = IdentifierString()
+  [LOOKAHEAD(1)//when inside method
+    pConstructor = PrimaryConstructor()]
+  [body = ClassBody()]
+
+
+ {YastNode result = node(OBJECT_DEF, NAME, name);
+  if (pConstructor != null && body == null) body = al();
+  if (pConstructor != null) body.add(pConstructor);
+  if (body != null) result.map.put(MEMBERS, body);
+  return result;}
+}
+
+YastNode PrimaryConstructor() :
+{YList params = al();YastNode node;}
+{
+["constructor"]
+"("
+      node = FunctionParameter() {params.add(node);}
+      ("," node = FunctionParameter() {params.add(node);} )*
+")"
+ {return node(METHOD_DEF, NAME, "<primary>", PARAMETERS, params);}
+}
+
+YList ClassBody() :
+{YList result = al();}
+    { "{" result = Members() "}" {return result;}
+}
+
+YList EnumClassBody() :
+{YList enums; YList members = null;}
+{
+    "{" enums = EnumEntries() [";" members = Members()] "}"
+
+{
+    if (members != null) enums.addAll(members);
+    return enums;
+}}
+
+YList Members() :
+{YList result = al();YastNode element;YList modifiers;}
+{
+   (element = MemberDeclaration() {result.add(element);} )*
+{return result;}
+}
+
+YList EnumEntries() :
+{YList result = al();YastNode element;}
+{
+   element = EnumEntry() {result.add(element);}
+
+   (
+   ","
+   (LOOKAHEAD({getToken(1).kind == T_SEMICOLON || getToken(1).kind == T_RBRACE}) {return result;}//hanging comma
+   |element = EnumEntry() {result.add(element);}
+   )
+   )*
+
+{return result;}
+}
+
+YastNode EnumEntry() :
+{YList modifiers, valArgs = null, classBody = null;String name;}
+{
+  modifiers = Modifiers() name = IdentifierString() [valArgs = ValueArguments()] [classBody = ClassBody()]
+{return node(ENUM_ENTRY, MODIFIERS, modifiers, NAME, name, ARGS, valArgs, MEMBERS, classBody);}}
+
+YastNode MemberDeclaration() :
+{YastNode element;YList modifiers;}
+{
+//  : companionObject       TODO
+//  : object                TODO
+//  : function
+//  : property
+//  : class
+//  : typeAlias             TODO
+//  : anonymousInitializer (the only one without modifiers)
+//  : secondaryConstructor
+
+        modifiers = Modifiers() (
+            element = _Object()
+            | element = Property() {element.map.put(NODE_TYPE, FIELD);}(SEMI())*
+            | element = Function()
+            | element = Class()
+
+            | element = AnonymousInitializer() //modifiers makes no sense here
+            | element = SecondaryConstructor()
+        )
+
+{element.map.put(MODIFIERS, modifiers);return element;}
+}
+
+YastNode AnonymousInitializer() :
+{YastNode block;}
+{
+    "init" block = Block()
+{return node(ANONYMOUS_INITIALIZER, BODY, block);}
+}
+
+YastNode SecondaryConstructor() :
+{YList params;YastNode deleg = null;YastNode body;}
+{
+    "constructor" params = ValueParameters() [":" deleg = ConstructorDelegationCall()]
+    body = Block()
+
+{return node(METHOD_DEF, NAME, "<init>", PARAMETERS, params, CONSTRUCTOR_DELEGATION, deleg, BODY, body);}
+}
+
+YastNode ConstructorDelegationCall() :
+{YList args;}
+{
+     "this" args = ValueArguments() {return node(CONSTRUCTOR_DELEGATION, NAME, "this", ARGS, args);}
+    |"super" args = ValueArguments() {return node(CONSTRUCTOR_DELEGATION, NAME, "super", ARGS, args);}
+}
+
+YastNode Function() :
+{String name;YList parameters = null;YastNode type = null;YastNode body = null;YList typeParameters = null;}
+{
+//: modifiers "fun"
+//      typeParameters?
+//      (type ".")?     TODO extension
+//      SimpleName
+//      typeParameters? TODO?
+//      valueParameters (":" type)?
+//      typeConstraints TODO
+//      functionBody?
+    "fun"
+    [typeParameters = TypeParameters()]
+    name = IdentifierString()
+    parameters = ValueParameters()
+    [":" type = Type()]
+    [body = FunctionBody()]
+{
+    YastNode result = node(METHOD_DEF, NAME, name, TYPE_PARAMETERS, typeParameters);
+    if (type != null) result.map.put(TYPE, type);
+    result.map.put(PARAMETERS, parameters);
+    if (body != null) result.map.put(BODY, body);
+    return result;
+}
+}
+
+YastNode FunctionBody() :
+{YastNode result;}
+{
+ (   result = Block()
+   | "=" result = Expression()
+ )
+{return result;}
+}
+
+YList ValueParameters() :
+{YList result = al();YastNode n;}
+{
+    "("
+//    (
+    (n = FunctionParameter() {result.add(n);})*
+
+
+//    )?
+    ")"
+
+{return result;}
+}
+
+YastNode FunctionParameter() :
+{boolean isVar = false;String name;YastNode type;YastNode expr = null;}
+{
+//functionParameter (used by valueParameters, primaryConstructor)
+//  : modifiers ("val" | "var")? parameter ("=" expression)?
+
+    ("val" | "var" {isVar = true;})?
+    name = IdentifierString() ":" type = Type() ("=" expr = Expression())?
+
+{
+    YastNode result = node(NEW_VAR, NAME, name, TYPE, type);
+    if (!isVar) result.map.put(CONST, true);
+    if (expr != null) result.map.put(EXPRESSION, expr);
+    return result;
+}
+}
+
+YastNode Block() :
+{YList ss;YastNode n = null;}
+{
+    "{" ss = Statements() "}"
+{return node(BLOCK, STATEMENTS, ss);}
+}
+
+YList Statements() :
+{YList result = al(); YastNode n;}
+{
+    (SEMI())* (n = Statement() {result.add(n);})*
+{return result;}
+}
+
+YastNode Statement() :
+{YastNode result;}
+{
+     (   result = Declaration()
+       | result = BlockLevelExpression()
+     ) (SEMI())*
+{return result;}
+}
+
+YastNode Declaration() :
+{YastNode result;}
+{
+//  : function   TODO
+//  : property
+//  : class
+//  : typeAlias  TODO
+//  : object
+     (
+      result = Property()
+     |result = Class()
+     |result = _Object()
+     )
+{return result;}
+}
+
+YastNode BlockLevelExpression() :
+{YastNode result;}
+{
+//: annotations ("\n")+  TODO
+//  expression
+    result = Expression()
+{return result;}
+}
+
+
+YastNode Property() :
+{boolean isVar = false;YastNode entry;YastNode expr = null;YList typeParameters = null;}
+{
+    ("val" | "var" {isVar = true;})
+    [typeParameters = TypeParameters()]
+    //(type ".")?                                   TODO extension
+    //(MultipleVariableDeclarations() {}            TODO
+    //| entry = VariableDeclarationEntry())
+    entry = VariableDeclarationEntry()
+//      typeConstraints                             TODO
+    [("by" | "=") expr = Expression() //[SEMI()]
+    ]
+//      (getter? setter? | setter? getter?) SEMI?}  TODO
+{
+    entry.map.put(CONST, true);
+    entry.map.put(TYPE_PARAMETERS, typeParameters);
+    if (expr != null) entry.map.put(EXPRESSION, expr);
+    return entry;}
+}
+
+//YList MultipleVariableDeclarations() :  //destructuring
+//{YList result = al();YastNode n;}
+//{
+//    "("
+//         n = VariableDeclarationEntry() {result.add(n);}
+//    ("," n = VariableDeclarationEntry() {result.add(n);})*
+//    ")"
+//{return result;}
+//}
+
+YastNode VariableDeclarationEntry() :
+{String name;YastNode type = null;}
+{
+    name = IdentifierString() [":" type = Type()]
+{return type == null ? node(NEW_VAR, NAME, name) : node(NEW_VAR, NAME, name, TYPE, type, WordsKotlin.EXPLICIT_TYPE, true);}
+}
+
+YList Modifiers() :
+{YList result = al();String node;isEnum = false;}
+{
+    //(modifier | annotations)* TODO annotations
+    (node = Modifier() {result.add(node);})*
+{ isEnum = result.contains("enum");
+  return result;}
+}
+
+String Modifier() :
+{String result;}
+{
+    (
+    //class
+      result = <T_ABSTRACT>.image
+    | result = <T_FINAL>.image
+    | result = <T_ENUM>.image
+    | result = <T_OPEN>.image
+    | result = <T_ANNOTATION>.image
+    | result = <T_SEALED>.image
+    | result = <T_DATA>.image
+
+    //member
+    | result = <T_OVERRIDE>.image
+    | result = <T_LATEINIT>.image
+
+    //access
+    | result = <T_PRIVATE>.image
+    | result = <T_PROTECTED>.image
+    | result = <T_PUBLIC>.image
+    | result = <T_INTERNAL>.image
+
+    //variance
+    | result = <T_IN>.image
+    | result = <T_OUT>.image
+
+    //parameter
+    | result = <T_NOINLINE>.image
+    | result = <T_CROSSINLINE>.image
+    | result = <T_VARARG>.image
+
+    //type parameter
+    | result = <T_REIFIED>.image
+
+    //function
+    | result = <T_TAILREC>.image
+    | result = <T_OPERATOR>.image
+    | result = <T_INFIX>.image
+    | result = <T_INLINE>.image
+    | result = <T_EXTERNAL>.image
+    | result = <T_SUSPEND>.image
+
+    //property
+    | result = <T_CONST>.image
+    )
+{return result;}
+}
+
+YastNode Expression() : //actually, it is an AssignmentExpression
+{YastNode left;String op;YastNode right;}
+{
+  left = Disjunction() (LOOKAHEAD(1) op = AssignmentOperator() right = Disjunction() {
+    left = node("=".equals(op) ? ASSIGNMENT : ASSIGNMENT_OP, ASSIGNMENT_OP, op, LEFT, left, RIGHT, right);
+  })*
+
+ {return left;}
+}
+
+//assignment                     =, +=, -=, *=, /=, %=
+//disjunction                    ||
+//conjunction                    &&
+//equalityComparison             ==, !==
+//comparison                     <, >, <=, >=
+//namedInfix                     in, !in, is, !is
+//elvisExpression                ?:
+//infixFunctionCall              a foo b
+//rangeExpression                ..                                     
+//additiveExpression             +, -
+//multiplicativeExpression       *, /, %
+//typeRHS                        :, as, as?                             TODO
+//prefixUnaryExpression          -, +, ++, --, !, labelDefinition
+//postfixUnaryExpression         ++, --, ., ?., ?, call, array
+
+//callableReference
+//atomicExpression
+
+String AssignmentOperator() :
+{Token t;}
+{
+( t="=" | t="*=" | t="/=" | t="%=" | t="+=" | t="-=" | t="<<=" | t=">>=" | t=">>>=" | t="&=" | t="^=" | t="|=" )
+{return t.image;}
+}
+
+YastNode Disjunction() :
+{String op;YastNode ex;YastNode right;}
+{
+   ex =                             Conjuction()
+                                    (LOOKAHEAD(1)
+   op =                             "||".image
+   right =                          Conjuction() {ex = node(METHOD_CALL, EXPRESSION, ref(op), ARGS, al(ex, right));}
+                                    )*
+  {return ex;}
+}
+
+YastNode Conjuction() :
+{String op;YastNode ex;YastNode right;}
+{
+   ex =                             EqualityComparison()
+                                    (LOOKAHEAD(1)
+   op =                             "&&".image
+   right =                          EqualityComparison() {ex = node(METHOD_CALL, EXPRESSION, ref(op), ARGS, al(ex, right));}
+                                    )*
+  {return ex;}
+}
+
+YastNode EqualityComparison() :
+{String op;YastNode ex;YastNode right;}
+{
+   ex =                             Comparison()
+                                    (LOOKAHEAD(1)
+                                    ( op = "==".image | op = "!=".image )
+   right =                          Comparison() {ex = node(METHOD_CALL, EXPRESSION, ref(op), ARGS, al(ex, right));}
+                                    )*
+  {return ex;}
+}
+
+YastNode Comparison() :
+{String op;YastNode ex;YastNode right;}
+{
+   ex =                             NamedInfix()
+                                    (LOOKAHEAD(1)
+                                    ( op = "<".image | op = ">".image | op = "<=".image | op = ">=".image )
+   right =                          NamedInfix()   {ex = node(METHOD_CALL, EXPRESSION, ref(op), ARGS, al(ex, right));}
+                                    )*
+  {return ex;}
+}
+
+YastNode NamedInfix() :
+{YastNode result;YastNode node;boolean is;}
+{
+      result = ElvisExpression()
+      [LOOKAHEAD(1)"is" node = Type() {result = node(IS, EXPRESSION, result, IS, node);}]
+      [LOOKAHEAD(1)"!is" node = Type() {result = node(NOT_IS, EXPRESSION, result, IS, node);}]
+      (LOOKAHEAD(1)("in" {is=true;}| "!in"{is=false;}) node = ElvisExpression() {result = node(is ? IN : NOT_IN, EXPRESSION, result, IN, node);})*
+
+{return result;}
+}
+
+YastNode ElvisExpression() :
+{YastNode ex;YastNode right;}
+{
+    ex = InfixFunctionCall()
+                                    (LOOKAHEAD(1)
+                                    "?:"
+    right =                          InfixFunctionCall() {ex = node(ELVIS, EXPRESSION, ex, ELSE, right);}
+                                    )*
+  {return ex;}
+}
+
+YastNode InfixFunctionCall() :
+{YastNode result, right;String name;}
+{
+    result = RangeExpression()
+                                    (LOOKAHEAD(1)
+                                    name = IdentifierString()
+    right =                         RangeExpression() {result = node(METHOD_CALL, NAME, name, ARGS, al(result, right));}
+                                    )*
+    {return result;}
+}
+
+YastNode RangeExpression() :
+{YastNode result, right;}
+{
+    result = AdditiveExpression()
+                                    (LOOKAHEAD(1)
+                                    ".."
+    right =                         AdditiveExpression() {result = node(RANGE, LEFT, result, RIGHT, right);}
+                                    )*
+    {return result;}
+}
+
+YastNode AdditiveExpression() :
+{String op;YastNode ex;YastNode right;
+//System.out.println("in AdditiveExpression");
+}
+{
+   ex =                             MultiplicativeExpression()
+                                    (LOOKAHEAD(1)
+                                    ( op = "+".image | op = "-".image )
+   right =                          MultiplicativeExpression()  {ex = node(METHOD_CALL, EXPRESSION, ref(op), ARGS, al(ex, right));}
+                                    )*
+  {return ex;}
+}
+
+YastNode MultiplicativeExpression() :
+{String op;YastNode ex;YastNode right;
+//System.out.println("in MultiplicativeExpression");
+}
+{
+   ex =                             TypeRhs()
+                                    (LOOKAHEAD(1)
+                                    ( op = "*".image | op = "/".image | op = "%".image )
+   right =                          TypeRhs() {ex = node(METHOD_CALL, EXPRESSION, ref(op), ARGS, al(ex, right));}
+                                    )*
+  {return ex;}
+}
+
+YastNode TypeRhs() :
+{String op;YastNode ex;YastNode right;
+//System.out.println("in MultiplicativeExpression");
+}
+{
+   ex =                             PrefixUnaryExpression()
+                                    (LOOKAHEAD(1)
+                                    ( op = "as".image | op = "as?".image | op = ":".image )
+   right =                          PrefixUnaryExpression() {ex = node(CAST, EXPRESSION, ex, OPERATOR, op, TYPE, right);}
+                                    )*
+  {return ex;}
+}
+
+YastNode PrefixUnaryExpression() :
+{YastNode ex; Token t = null;
+//System.out.println("in PrefixExpression");
+}
+{
+                                [t = "+" | t = "-" | t = "++" | t = "--" | t = "!"
+                                //annotations           TODO
+                                //label definitions     TODO
+                                ]//                     TODO ()*
+   ex =                         PostfixUnaryExpression()
+
+  {return t != null ? node(PREFIX, OPERATOR, t.image, EXPRESSION, ex) : ex;}
+}
+
+YastNode PostfixUnaryExpression() :
+{YastNode ex; Token t = null;YastNode node;String op;
+//System.out.println("in PostfixExpression");
+}
+{
+   ex =  AtomicExpression() (LOOKAHEAD(1)ex = PostfixUnaryOperation(ex))*
+    //: callableReference postfixUnaryOperation*    TODO
+
+  {return t != null ? node(POSTFIX, OPERATOR, t.image, EXPRESSION, ex) : ex;}
+}
+
+
+
+
+
+
+
+YastNode PostfixUnaryOperation(YastNode body) :
+{Token t = null;YastNode n;String op;String s;YList l;
+//System.out.println("in PostfixOperation, " + body);
+}
+{
+//  : "++" : "--" : "!!"
+//  : callSuffix
+//  : arrayAccess                      
+//  : memberAccessOperation postfixUnaryExpression
+
+
+                                (
+                                (t = "++" | t = "--" | t = "!!") {n = node(POSTFIX, OPERATOR, t.image, EXPRESSION, body);}
+                                | n = CallSuffix() {n = n.withRearrange(EXPRESSION, body, ARGS, n.map.get(ARGS));}
+
+                                | l = ArrayAccess() {n = node(ARRAY_ACCESS, EXPRESSION, body, ARGS, l);}
+
+                                |
+                                //(1)  LOOKAHEAD(MemberAccessOperator() IdentifierString())
+                                  op = MemberAccessOperator() s = IdentifierString() {n = node(DOT, OPERATOR, op, NAME, s, LEFT, body);}
+                                //(1) and (2) are needed for strange lines like {->}.fun Function<*>.(){}()
+                                //  overall - for every case where dot is followed by not IdentifierString
+                                //  to do: (don't include PostfixUnaryExpression her, just return "dotted" expression without right part)
+                                //(2)| op = MemberAccessOperator() n = PostfixUnaryExpression() {n = node(RIGHT_DOT, OPERATOR, op, LEFT, body, RIGHT, n);}
+                                )
+
+
+  {return n;}
+}
+
+YList ArrayAccess() :
+{YList result = al();YastNode e;}
+{
+    "[" e = Expression() {result.add(e);}
+        ("," e = Expression() {result.add(e);})*
+    "]"
+{return result;}
+}
+
+String MemberAccessOperator() :
+{String result;}
+{
+    (result = ".".image | result = "?.".image)
+{return result;}
+}
+
+YastNode CallSuffix() :
+{YList result = al(); YastNode node;}
+{
+   result = ValueArguments()
+{return node(METHOD_CALL, ARGS, result);}
+}
+
+YList ValueArguments() :
+{YList result = al(); YastNode node;}
+{
+    //"(" ((SimpleName "=")? "*"? expression){","} ")"
+    "(" [ node = ValueArgument() {result.add(node);} ( "," node = ValueArgument() {result.add(node);} )* ] ")"
+{return result;}
+}
+
+YastNode ValueArgument() :
+{YastNode result;
+//System.out.println("in ValueArgument");
+}
+{
+     ((LOOKAHEAD(2)IdentifierString() "=")? ("*")? result = Expression())
+
+{return result;}
+}
+
+
+
+
+
+
+YastNode AtomicExpression() :
+{YastNode result;}
+{
+//        : "(" expression ")"
+//        : literalConstant
+//        : functionLiteral                              TODO
+//        : "this" labelReference?                       TODO
+//        : "super" ("<" type ">")? labelReference?      TODO
+//        : if
+//        : when                                         TODO
+//        : try
+//        : objectLiteral                                TODO
+//        : jump
+//        : loop                                         
+//        : collectionLiteral                            TODO
+//        : SimpleName
+
+                                            (
+                                            "("
+  result =                                  Expression()
+                                            ")"
+                                            |
+  result =                                  LiteralConstant()
+                                            |
+  result =                                  If()
+                                            |
+  result =                                  Try()
+                                            |
+  result =                                  Jump()
+                                            |
+  result =                                  Loop()
+                                            |
+  result =                                  SimpleName()
+                                            )
+
+ {return result;}
+}
+
+
+
+
+
+
+
+YastNode If() :
+{YastNode cond;YastNode thn;YastNode els = null;}
+{
+          "if"
+          "("
+  cond =  Expression()
+          ")"
+  thn =   ControlStructureBody() //[SEMI()]
+          [
+          LOOKAHEAD(1)//https://www.cs.purdue.edu/homes/hosking/javacc/doc/lookahead.html
+          "else"
+  els =   ControlStructureBody()
+          ]
+
+{
+return node(IF, CONDITION, cond, THEN, thn, ELSE, els);
+}
+}
+
+YastNode ControlStructureBody() :
+{YastNode result;}
+{
+    result = Block() {return result;}
+    |
+    result = BlockLevelExpression() {return result;}
+{}
+}
+
+YastNode Try() :
+{YastNode block;YList catches = al();YastNode fin = null;YastNode n;}
+{
+    "try" block = Block() (n = CatchBlock() {catches.add(n);})* ["finally" fin = Block()]
+
+{return node(TRY, BODY, block, CATCH, catches, FINALLY, fin);}
+}
+
+YastNode CatchBlock() :
+{String name;YastNode type;YastNode body;}
+{
+   //: "catch" "("
+   //annotations  TODO
+   //SimpleName ":" userType ")" block
+   "catch" "("
+     name = IdentifierString() ":" type = UserType()
+   ")"
+   body = Block()
+
+{return node(CATCH, NAME, name, TYPE, type, BODY, body);}
+}
+
+YastNode Jump() :
+{YastNode result = null;YastNode label = null;}
+{
+//  : "throw" expression
+//  : "return" ++ labelReference? expression?
+//  : "continue" ++ labelReference?
+//  : "break" ++ labelReference?
+                                            (
+                                            "throw" result = Expression() {return node(THROW, EXPRESSION, result);}
+
+                                            | "return" [label = LabelReference()] [LOOKAHEAD(1) result = Expression()]
+                                              {return node(RETURN, EXPRESSION, result, LABEL_REF, label);}
+                                            | "continue" [label = LabelReference()] {return node(CONTINUE, LABEL_REF, label);}
+                                            | "break" [label = LabelReference()] {return node(BREAK, LABEL_REF, label);}
+                                            )
+{return result;}
+}
+
+YastNode LabelReference() :
+{YastNode name;}
+{
+    "@" name = SimpleName() {name.map.put(NODE_TYPE, LABEL_REF);return name;}
+{}
+}
+
+YastNode LabelDefinition() :
+{YastNode name;}
+{
+    name = SimpleName() "@"  {name.map.put(NODE_TYPE, LABEL_DEF);return name;}
+{}
+}
+
+YastNode Loop() :
+{YastNode result;}
+{
+//   : for
+//   : while
+//   : doWhile
+    (result = For()
+    |result = While()
+    |result = DoWhile())
+{return result;}
+}
+
+YastNode For() :
+{YastNode expression;YastNode body;YastNode variable;}
+{
+//  "for"
+//  "("
+//  annotations                   TODO
+//  (multipleVariableDeclarations TODO
+// |  variableDeclarationEntry)
+//  "in"
+//  expression
+//  ")"
+//  controlStructureBody
+
+  "for"
+  "("
+  variable = VariableDeclarationEntry()
+  "in"
+  expression = Expression()
+  ")"
+  body = ControlStructureBody()
+
+{return node(FOR_IN, VARIABLE, variable, FOR_IN, expression, BODY, body);}
+}
+
+YastNode While():
+{YastNode expression; YastNode body;}
+{
+    "while" "(" expression = Expression() ")" body = ControlStructureBody() {return node(WHILE_LOOP, EXPRESSION, expression, BODY, body);}
+}
+
+YastNode DoWhile():
+{YastNode expression; YastNode body;}
+{
+    "do" body = ControlStructureBody() "while" "(" expression = Expression() ")" {return node(DO_WHILE_LOOP, EXPRESSION, expression, BODY, body);}
+}
+
+
+
+
+
+
+
+
+YList TypeArguments() :
+{YList result = al(); YastNode node;}
+{
+    "<" [ node = Type() {result.add(node);} ( "," node = Type() {result.add(node);} )* ] ">"
+{return result;}
+}
+
+YList TypeParameters() :
+{YList result = al(); YastNode node;}
+{
+    "<"  node = TypeParameter() {result.add(node);} ( "," node = TypeParameter() {result.add(node);} )*  ">"
+{return result;}
+}
+
+YastNode TypeParameter() :
+{String name;YList modifiers;YastNode userType = null;}
+{
+    modifiers = Modifiers() name = IdentifierString() [":" userType = UserType()]
+{return node(TYPE_PARAMETER, NAME, name, MODIFIERS, modifiers, USER_TYPE, userType);}
+}
+
+YastNode UserType() :
+{YastNode n;YList<YastNode> seq = al();}
+{
+    n = SimpleUserType() {seq.add(n);}
+    (LOOKAHEAD(1) // a is com.Object vs (a is Object).or(false)
+    "." n = SimpleUserType() {seq.add(n);})*
+
+{   if (seq.size() == 1) return seq.get(0);
+    else return node(TYPE, SEQ, seq);}
+}
+
+YastNode SimpleUserType() :
+{String name;YList typeParams = al();YastNode param;}
+{
+    //SimpleName ("<" (projection? type | "*"){","} ">")?
+    name = IdentifierString() [
+    LOOKAHEAD(1)// a is Foo<Bar> vs (a is Foo)< >
+    "<"
+    param = SimpleUserTypeParam() {typeParams.add(param);}
+    ("," param = SimpleUserTypeParam() {typeParams.add(param);})*
+    ">"]
+
+{return node(TYPE, NAME, name, TYPE_PARAMETERS, typeParams);}
+}
+
+YastNode SimpleUserTypeParam() :
+{String variance = null;YastNode result;}
+{
+    [variance = VarianceAnnotation()] result = Type() {if (variance != null) result.map.put(IN_OUT, variance);return result;}
+    |
+    "*" {return node(TYPE, NAME, ";ANY");}
+
+}
+
+
+
+String VarianceAnnotation() :
+{}
+{
+  "in" {return "in";}
+  |"out" {return "out";}
+}
+
+YastNode TypeReference() :
+{YastNode result;}
+{
+  (
+  "(" result = TypeReference() ")"
+  //TODO function type
+  | result = UserType()
+  | "dynamic" {result = node(TYPE, NAME, "dynamic");}
+
+  )
+{return result;}
+}
+
+YastNode Type() :
+{YastNode result;}
+{
+    //TODO type modifiers
+    result = TypeReference() ["?" {result.map.put(NULLABLE, true);}] {return result;}
+{}
+}
+
+String DottedName() :
+{String s;String s1;
+}
+{
+  s = IdentifierString()
+  ( "." s1=IdentifierString() {s = s + "." + s1;}
+  )*
+    {return s;}
+}
+
+YastNode SimpleName() :
+{String s;
+}
+{
+  s = IdentifierString()
+  {return ref(s);}
+}
+
+YastNode LiteralConstant() :
+{YastNode res; String s;}
+{
+
+//  : "true" | "false"
+//  : stringTemplate    TODO
+//  : NoEscapeString    TODO
+//  : IntegerLiteral
+//  : CharacterLiteral
+//  : FloatLiteral
+//  : "null"
+
+(
+  s = <T_TRUE>.image                         {res = node(CONST, TYPE, node(TYPE, NAME, "Boolean", FULL_NAME, "kotlin.Boolean"), VALUE, true);}
+| s = <T_FALSE>.image                        {res = node(CONST, TYPE, node(TYPE, NAME, "Boolean", FULL_NAME, "kotlin.Boolean"), VALUE, false);}
+
+| s = <STRING_LITERAL>.image                 {res = node(CONST, TYPE, node(TYPE, NAME, "String", FULL_NAME, "kotlin.String"), VALUE,
+                                                s.substring(1, s.length() - 1));if (s.contains("\\")) BadException.notImplemented("TODO parse characters");}
+
+| s = <INTEGER_LITERAL>.image                {res = node(CONST, TYPE, node(TYPE, NAME, "Int", FULL_NAME, "kotlin.Int"), VALUE, Integer.parseInt(s));}
+| s = <LONG_INTEGER_LITERAL>.image           {res = node(CONST, TYPE, node(TYPE, NAME, "Long", FULL_NAME, "kotlin.Long"), VALUE,
+                                                Long.parseLong(s.endsWith("L") || s.endsWith("l") ? s.substring(0, s.length() - 1) : s));}
+
+| s = <CHARACTER_LITERAL>.image              {res = node(CONST, TYPE, node(TYPE, NAME, "Char", FULL_NAME, "kotlin.Char"), VALUE,
+                                                s.charAt(1));if (s.length() != 3) BadException.notImplemented("TODO parse characters");}
+
+| s = <FLOATING_POINT_LITERAL>.image         {res = node(CONST, TYPE, node(TYPE, NAME, "Float", FULL_NAME, "kotlin.Float"), VALUE, Float.parseFloat(s));}
+| s = <DOUBLE_FLOATING_POINT_LITERAL>.image  {res = node(CONST, TYPE, node(TYPE, NAME, "Double", FULL_NAME, "kotlin.Double"), VALUE, Double.parseDouble(s));}
+| s = <T_NULL>.image                         {res = node(CONST, TYPE, node(TYPE, NAME, "Object", FULL_NAME, "kotlin.Object"), VALUE, null);}//TODO Any/Nothing/Any?/Nothing?
+)
+{return res;}
+}
+
+void SEMI() :
+{}
+{
+    ";"
+    {return;}
+}
+
+String IdentifierString() :
+{Token t;}
+{   (
+    t = <IDENTIFIER>
+    |
+    "`" t = <IDENTIFIER> "`"
+    )
+{return t.image;}
+}
+
+
+
+
+
