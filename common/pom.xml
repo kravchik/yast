@@ -43,7 +43,7 @@
         <dependency>
             <groupId>yk</groupId>
             <artifactId>yincubator</artifactId>
-            <version>0.02-SNAPSHOT</version>
+            <version>0.02</version>
         </dependency>
     </dependencies>
 
