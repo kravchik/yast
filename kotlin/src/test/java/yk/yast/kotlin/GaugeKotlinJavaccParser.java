@@ -18,17 +18,6 @@ public class GaugeKotlinJavaccParser {
     public static void main(String[] args) {
         String fileName = "kotlin/src/test/resources/SimpleClass.kt";
         new GaugeTester("Kotlin JavaCC parser").testExecutionTime(() -> parseFile(fileName));
-
-        //StopWatchNs wholeTime = new StopWatchNs();
-        //StopWatchNs firstCall = new StopWatchNs();
-        //Runnable lambda = () -> parseFile(fileName);
-        ////tester.testExecutionTime(lambda);
-        //parseFile(fileName);
-        //System.out.println("first call elapsed : " + firstCall.getCurrentTimeMs());
-        //
-        //Utils.testExecutionTime(() -> parseFile(fileName));
-        //
-        //System.out.println("Whole time for 1111 calls: " + wholeTime.getCurrentTime());
     }
 
     public static void parseFile(String fileName) {

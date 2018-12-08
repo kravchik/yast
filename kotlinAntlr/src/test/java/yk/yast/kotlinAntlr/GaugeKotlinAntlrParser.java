@@ -22,17 +22,6 @@ public class GaugeKotlinAntlrParser {
     public static void main(String[] args) {
         String fileName = "kotlin/src/test/resources/SimpleClass.kt";
         new GaugeTester("Kotlin ANTLR parser").testExecutionTime(() -> parse(fileName));
-
-        //System.out.println("Kotlin ANTLR parser");
-        //
-        //StopWatchNs wholeTime = new StopWatchNs();
-        //
-        //StopWatchNs sw = new StopWatchNs();
-        //parse(fileName);
-        //System.out.println("first call elapsed : " + sw.getCurrentTimeMs());
-        //
-        //Utils.testExecutionTime(() -> parse(fileName));
-        //System.out.println("Whole time for 1111 calls: " + wholeTime.getCurrentTime());
     }
 
     private static void parse(String fileName) {
