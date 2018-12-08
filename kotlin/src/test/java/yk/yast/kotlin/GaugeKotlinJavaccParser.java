@@ -16,7 +16,7 @@ import static yk.yast.common.Words.NODE_TYPE;
 public class GaugeKotlinJavaccParser {
 
     public static void main(String[] args) {
-        String fileName = "kotlin/src/test/resources/SimpleClassleClass.kt";
+        String fileName = "kotlin/src/test/resources/SimpleClass.kt";
         new GaugeTester("Kotlin JavaCC parser").testExecutionTime(() -> parseFile(fileName));
 
         //StopWatchNs wholeTime = new StopWatchNs();
