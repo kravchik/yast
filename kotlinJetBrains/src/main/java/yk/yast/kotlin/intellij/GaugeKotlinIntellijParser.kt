@@ -19,7 +19,7 @@ import yk.yast.common.utils.GaugeTester
  */
 
 fun main(args: Array<String>) {
-    val path = "kotlin/src/test/resources/vec3.kt"
+    val path = "kotlin/src/test/resources/SimpleClass.kt"
     GaugeTester("Kotlin IntelliJ parser (without analyzer)").testExecutionTime{ parseFile("vec3.kt", IO.readFile(path))}
 }
 

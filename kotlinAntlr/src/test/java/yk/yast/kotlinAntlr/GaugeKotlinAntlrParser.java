@@ -20,7 +20,7 @@ import java.nio.file.Paths;
 public class GaugeKotlinAntlrParser {
 
     public static void main(String[] args) {
-        String fileName = "kotlin/src/test/resources/vec3.kt";
+        String fileName = "kotlin/src/test/resources/SimpleClass.kt";
         new GaugeTester("Kotlin ANTLR parser").testExecutionTime(() -> parse(fileName));
 
         //System.out.println("Kotlin ANTLR parser");
