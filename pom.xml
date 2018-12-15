@@ -14,6 +14,7 @@
         <module>kotlin</module>
         <module>kotlinAntlr</module><!--TODO get rid-->
         <module>kotlinJetBrains</module><!--TODO get rid-->
+        <module>ubenchmark</module>
 
     </modules>
 
@@ -23,6 +24,8 @@
 
     <properties>
         <kotlin.version>1.2.71</kotlin.version>
+        <javac.source>1.8</javac.source>
+        <javac.target>1.8</javac.target>
     </properties>
 
     <dependencies>

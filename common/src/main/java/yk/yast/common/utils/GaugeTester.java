@@ -2,7 +2,9 @@ package yk.yast.common.utils;
 
 /**
  * Created by Yuri Kravchik on 08.12.2018
+ * @deprecated JMH should be used instead (see ubenchmark module)
  */
+@Deprecated
 public class GaugeTester {
     private StopWatchNs wholeTime;
     private StopWatchNs firstCall;
