@@ -77,6 +77,7 @@ public class Words {
     public static final String STATEMENT = "STATEMENT";
     public static final String CAST = "CAST";//TYPE, EXPRESSION [OPERATOR]
     public static final String ARGS = "ARGS";
+    public static final String NAMED_ARGS = "NAMED_ARGS";
     public static final String PARAMETERS = "PARAMETERS";
     public static final String MEMBERS = "MEMBERS";
     public static final String LEFT = "LEFT";
@@ -135,6 +136,8 @@ public class Words {
     public static final String TRY = "TRY";//body, catch[], finally?
     public static final String CATCH = "CATCH";
     public static final String FINALLY = "FINALLY";
+
+    public static final String CARET = "CARET";
 
     //public static final String TYPE_REF = "TYPE_REF";//TODO simple REF, because we can float.class, and can access static members... or TYPE_REF ok?
 

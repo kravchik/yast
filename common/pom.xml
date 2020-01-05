@@ -6,12 +6,13 @@
 
     <parent>
         <groupId>yk.yast</groupId>
-        <artifactId>yast</artifactId>
+        <artifactId>yast-root</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>common</artifactId>
     <version>0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
     <build>
         <defaultGoal>install</defaultGoal>

@@ -6,7 +6,7 @@
 
     <parent>
         <groupId>yk.yast</groupId>
-        <artifactId>yast</artifactId>
+        <artifactId>yast-root</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
